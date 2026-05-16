@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useRef} from 'react';
 import {
   AbsoluteFill,
   Easing,
@@ -33,6 +33,33 @@ const subtitleData: SubtitleSegment[] = [
 
   {text: "That's all for this course. If you don't take this course, then who?", start: 1215, end: 1320},
 ];
+
+
+const useSpeechNarration = (activeText: string | null) => {
+  const lastSpokenRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || !activeText) {
+      return;
+    }
+
+    if (lastSpokenRef.current === activeText) {
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(activeText);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.97;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+    lastSpokenRef.current = activeText;
+
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, [activeText]);
+};
 
 const FloatingSymbols: React.FC = () => {
   const frame = useCurrentFrame();
@@ -195,6 +222,8 @@ const DataViz: React.FC = () => {
 
 export const AICourseVideo: React.FC = () => {
   const frame = useCurrentFrame();
+  const activeSubtitle = subtitleData.find((s) => frame >= s.start && frame < s.end) ?? null;
+  useSpeechNarration(activeSubtitle?.text ?? null);
 
   return (
     <AbsoluteFill style={{backgroundColor: '#050b14'}}>
