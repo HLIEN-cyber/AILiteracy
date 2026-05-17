@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "start": "remotion studio",
-    "build": "remotion render src/index.ts AILiteracyCourse out/ai-literacy-course.mp4",
-    "lint": "eslint src --ext .ts,.tsx"
+    "build": "remotion render src/index.ts AILiteracyCourse public/ai-literacy-course.mp4",
+    "lint": "node scripts/lint.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "react": "18.3.1",
