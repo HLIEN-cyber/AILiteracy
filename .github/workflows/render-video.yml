@@ -6,10 +6,12 @@ on:
 jobs:
   render:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -27,7 +29,7 @@ jobs:
         run: npx remotion@latest render src/index.ts AIClassroom out/ai-literacy.mp4
 
       - name: Upload MP4 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ai-literacy-video
           path: out/ai-literacy.mp4
