@@ -1,7 +1,8 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect, useMemo, useRef} from 'react';
 import {
   AbsoluteFill,
   Easing,
+  Audio,
   Img,
   Sequence,
   interpolate,
@@ -192,6 +193,57 @@ const SceneLayer: React.FC<{src: string; sceneFrame: number}> = ({src, sceneFram
   );
 };
 
+
+
+const createSynthWavDataUri = (durationSec: number): string => {
+  const sampleRate = 44100;
+  const frameCount = Math.floor(durationSec * sampleRate);
+  const channelCount = 1;
+  const bytesPerSample = 2;
+  const blockAlign = channelCount * bytesPerSample;
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = frameCount * blockAlign;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+
+  const writeString = (offset: number, text: string) => {
+    for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i));
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, channelCount, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bytesPerSample * 8, true);
+  writeString(36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  for (let i = 0; i < frameCount; i++) {
+    const t = i / sampleRate;
+    const fadeIn = Math.min(1, t / 2);
+    const fadeOut = Math.min(1, (durationSec - t) / 2);
+    const envelope = Math.max(0, Math.min(fadeIn, fadeOut));
+    const sample = 0.08 * envelope * (0.6 * Math.sin(2 * Math.PI * 220 * t) + 0.4 * Math.sin(2 * Math.PI * 330 * t));
+    view.setInt16(44 + i * 2, Math.max(-32767, Math.min(32767, Math.floor(sample * 32767))), true);
+  }
+
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return `data:audio/wav;base64,${btoa(binary)}`;
+};
+
+const NarrationBed: React.FC = () => {
+  const wavDataUri = useMemo(() => createSynthWavDataUri(44.5), []);
+  return <Audio src={wavDataUri} volume={0.35} />;
+};
+
 const DataViz: React.FC = () => {
   const frame = useCurrentFrame();
 
@@ -243,6 +295,7 @@ export const AICourseVideo: React.FC = () => {
         <SceneLayer src="/slides/5Thanks.png" sceneFrame={frame - 1215} />
       </Sequence>
 
+      <NarrationBed />
       <DataViz />
       <FloatingSymbols />
       <HUDOverlay />
