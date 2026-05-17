@@ -10,6 +10,14 @@ jobs:
   render:
     runs-on: ubuntu-latest
     steps:
+      - name: Verify Node 24 action migration
+        run: |
+          echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=$FORCE_JAVASCRIPT_ACTIONS_TO_NODE24"
+          if grep -R -nE "actions/(checkout|upload-artifact)@v4" .github/workflows; then
+            echo "Found deprecated action version(s)."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v5
 
