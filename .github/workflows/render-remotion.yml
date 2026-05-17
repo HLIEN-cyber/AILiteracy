@@ -30,12 +30,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Render AIClassroom composition
-        run: npx remotion@latest render src/index.ts AIClassroom out/ai-literacy.mp4
+      - name: Render AILiteracyCourse composition to MP4
+        run: npm run build
 
       - name: Upload MP4 artifact
         uses: actions/upload-artifact@v5
         with:
           name: ai-literacy-mp4
-          path: out/ai-literacy.mp4
+          path: public/ai-literacy-course.mp4
           if-no-files-found: error
